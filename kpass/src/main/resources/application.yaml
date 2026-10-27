@@ -18,6 +18,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        # camelCase 컬럼명을 DB에 그대로 생성하기 위한 네이밍 전략 설정
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
 logging:
   level:

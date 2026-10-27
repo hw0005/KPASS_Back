@@ -19,9 +19,21 @@ public class QTestEntity extends EntityPathBase<TestEntity> {
 
     public static final QTestEntity testEntity = new QTestEntity("testEntity");
 
+    public final StringPath encryptedAccountNumber = createString("encryptedAccountNumber");
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
-    public final StringPath title = createString("title");
+    public final StringPath nickname = createString("nickname");
+
+    public final StringPath password = createString("password");
+
+    public final StringPath profileImage = createString("profileImage");
+
+    public final StringPath provider = createString("provider");
+
+    public final StringPath providerId = createString("providerId");
+
+    public final StringPath role = createString("role");
 
     public QTestEntity(String variable) {
         super(TestEntity.class, forVariable(variable));

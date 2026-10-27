@@ -1,4 +1,4 @@
-package com.example.kpass.global;
+package com.example.kpass.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
