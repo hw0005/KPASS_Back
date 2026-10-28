@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.kpass.auth.dto.OAuthUserInfoDto;
 import com.example.kpass.domain.member.entity.Member;
 import com.example.kpass.domain.member.repository.MemberRepository;
 import com.example.kpass.domain.member.validator.MemberValidator;
@@ -23,6 +24,12 @@ public class MemberBO {
 	private final PasswordEncoder passwordEncoder;
 	
 	
+	/**
+	 * 로컬 로그인 시
+	 * @param email
+	 * @param password
+	 * @return
+	 */
 	@Transactional(readOnly = true)
 	public Member login(String email, String password) {
 		Optional<Member> memberOpt = memberRepository.findByEmail(email);
@@ -65,6 +72,28 @@ public class MemberBO {
 		// 저장
 		return memberRepository.save(member);
 	}
+	
+	/**
+	 * OAuth 회원가입 및 로그인
+	 * @param oAuthUserInfoDto
+	 * @return
+	 */
+	@Transactional
+	public Member processOAuthLogin(OAuthUserInfoDto oAuthUserInfoDto) {
+		Optional<Member> memberOpt = memberRepository.findByEmail(oAuthUserInfoDto.getEmail());
+		
+		if(memberOpt.isPresent()) {
+			return memberOpt.get();
+		}
+		
+		return addOAuthUser(
+				oAuthUserInfoDto.getEmail(),
+				oAuthUserInfoDto.getNickname(), 
+				oAuthUserInfoDto.getProvider(), 
+				oAuthUserInfoDto.getProviderId(), 
+				oAuthUserInfoDto.getProfileImage(),
+				oAuthUserInfoDto.getAccountNumber());
+	}
 
 	/**
 	 * OAuth 회원가입
@@ -77,13 +106,13 @@ public class MemberBO {
 	 */
 	@Transactional
 	public Member addOAuthUser(String email, String originalNickname, String provider, String providerId,
-			String profileImage) {
+			String profileImage, String accountNumber) {
 		memberValidator.validateEmailDuplicate(email);
 		
 		//우선 uniqueNickName==닉네임 중복 시
 		String uniqueNickname = generateUniqueNickname(originalNickname);		
 		
-		Member member = Member.createOAuth(email, uniqueNickname, provider, providerId, profileImage);
+		Member member = Member.createOAuth(email, uniqueNickname, provider, providerId, profileImage, accountNumber);
 	
 		memberRepository.save(member);
 		return member;
@@ -103,4 +132,5 @@ public class MemberBO {
 
 		return nickname;
 	}
+	
 }

@@ -41,6 +41,8 @@ public class QMember extends EntityPathBase<Member> {
 
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 
+    public final NumberPath<Long> version = createNumber("version", Long.class);
+
     public QMember(String variable) {
         super(Member.class, forVariable(variable));
     }

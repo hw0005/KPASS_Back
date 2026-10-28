@@ -12,9 +12,7 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
 	// 기본 다 있음
 	
 	//-------------------- 로그인, 회원가입 시 로컬과 OAuth 로그인 중복-------------------------
-	// 로컬(이메일, 닉네임)
-	Optional<Member> findByEmailOrNickname(String email, String nickname);
-	// OAuth(이메일, 닉네임 각각)
+	// 로컬, OAuth(이메일, 닉네임 각각)
     boolean existsByEmail(String email);
     boolean existsByNickname(String nickname);
     

@@ -33,7 +33,7 @@ public class SecurityConfig {
             
             // 3. URL 권한 설정 (/api/auth 하위 모든 요청은 인증 없이 접근 허용)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/**").permitAll()
                 .anyRequest().authenticated()
             );
 

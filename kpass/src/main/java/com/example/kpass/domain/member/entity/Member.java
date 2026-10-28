@@ -105,13 +105,14 @@ public class Member {
     }
 
     // OAuth 회원 생성
-    public static Member createOAuth(String email, String uniqueNickname, String provider, String providerId, String profileImage) {
+    public static Member createOAuth(String email, String uniqueNickname, String provider, String providerId, String profileImage, String accountNumber) {
         return Member.builder()
                 .email(email)
                 .nickname(uniqueNickname)
                 .profileImage(profileImage)
                 .provider(provider)
                 .providerId(providerId)
+                .encryptedAccountNumber(accountNumber)
                 .role("USER")
                 .build();
     }
