@@ -4,11 +4,7 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,6 +48,14 @@ public class PerformanceBO {
 			.compile("([가-힣A-Za-z0-9\\s]+?)\\s*(\\d{1,3}(?:,\\d{3})*|\\d+)\\s*원");
 
 	// KOPIS WAF 방화벽 통과용 완벽한 HTTP Header 설정
+	/**
+	 * 역할: KOPIS 방화벽(WAF) 차단을 피하기 위한 HTTP 요청 헤더 생성기
+		핵심 로직
+		API 서버가 자동화 스크립트(봇)로 인식하지 않도록 Chrome 브라우저의 User-Agent 정보를 탑재
+		KOPIS 서버가 선호하는 XML 응답 형식(APPLICATION_XML_VALUE)을 Accept 헤더에 명시
+		
+	 * @return
+	 */
 	private HttpEntity<Void> createHeaderEntity() {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("User-Agent",
@@ -60,6 +64,19 @@ public class PerformanceBO {
 		return new HttpEntity<>(headers);
 	}
 
+	/**
+	 * 
+		역할: 시작일~종료일 기간 동안의 공연 목록 API를 페이징(cpage)하면서 끝까지 수집하는 메인 루프
+		
+		핵심 로직:
+		목록 API WAF 자동 재시도: 400 에러로 목록 요청이 막히면 1.5초 쿨다운 후 최대 3회까지 재시도
+		종료 조건: 목록 API 응답이 없거나 데이터 배열이 비어있으면 전체 수집을 정상 완료 처리
+		Fast-Skip 중복 검사: existsByExternalId 사전 조회를 통해 이미 DB에 있는 공연은 상세 API 호출 없이 넘기기
+		속도 제어: 상세 수집 호출 직후 Thread.sleep(300)을 부여해 KOPIS WAF 안전선(초당 ~3회)을 유지
+		
+	 * @param stdate
+	 * @param eddate
+	 */
 	public void fetchAndSaveKopisData(String stdate, String eddate) {
 		int cpage = 1;
 		int rows = 30;
@@ -123,6 +140,13 @@ public class PerformanceBO {
 	}
 
 	/**
+	 * 
+		역할: 5년 치 데이터 전수 수집(Cold Start)용 편의 메서드 (Initializer가 호출)
+	
+		핵심 로직:
+		LocalDate.now().minusYears(5)로 5년 전 오늘부터 plusMonths(6)로 6개월 뒤까지의 날짜 문자열(YYYYMMDD)을 자동 계산합니다.
+		동적으로 계산된 날짜 범위를 담아 fetchAndSaveKopisData()를 실행합니다.
+	
 	 * 5년 치 전수 수집용 편의 메서드
 	 */
 	public void fetchRecent5YearsData() {
@@ -133,6 +157,15 @@ public class PerformanceBO {
 	}
 
 	/**
+	 * 
+		역할: 공연 1건에 대해 단건 상세 API를 호출하고, 최저가 계산 및 DB 엔티티 저장을 수행
+	
+		핵심 로직:
+		상세 API WAF 자동 재시도: 상세 요청 시 차단되면 1초 쿨다운을 거치며 최대 3회 재시도.
+		최저가 계산: parseSeatPrices()로 추출한 좌석 목록을 순수 for문으로 순회하여 최저 가격(minPrice)을 추출.
+		트랜잭션 저장: 날짜 파싱 및 카테고리/지역 변환 후 Performance.createPerformance()로 엔티티를 만들어 DB에 저장.
+		예외 안전망: DB 동시 저장으로 인한 중복 키 발생 시 DataIntegrityViolationException을 catch하여 서버가 뻗지 않고 무시하도록 처리.
+		
 	 * 단건 상세 조회 및 DB 저장 (리턴 타입을 void로 지정하여 반환 에러 해결)
 	 */
 	@Transactional
