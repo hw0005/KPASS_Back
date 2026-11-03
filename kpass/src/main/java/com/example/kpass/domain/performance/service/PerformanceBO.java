@@ -100,39 +100,64 @@ public class PerformanceBO {
 					if (attempt < 3) {
 						log.warn("[목록 WAF 차단 감지] {}페이지 {}회차 대기 중...", cpage, attempt);
 						try {
-							Thread.sleep(1500 * attempt); // 1.5초 대기 후 재시도
+							Thread.sleep(3000 * attempt); // 3초 대기 후 재시도
 						} catch (InterruptedException ie) {
 							Thread.currentThread().interrupt();
 						}
 					} else {
-						log.error("[목록 수집 실패] cpage: {}", cpage, e);
+						log.error("[목록 수집 실패] WAF차단으로 인한 수집 실패 cpage: {}", cpage, e);
 					}
 				}
 			}
 
-			// 더 이상 가져올 목록이 없거나 3회 연속 실패 시 루프 종료
-			if (listResponse == null || listResponse.getItemList() == null || listResponse.getItemList().isEmpty()) {
-				log.info("=== [KOPIS 수집 완료] 총 {} 페이지 처리 완료 ===", cpage - 1);
-				break;
+			// 3회 다 실패했을 때는 정상 종료(완료) 로그를 안 찍고 break 하도록 구분
+			if (listResponse == null) {
+			    log.error("=== [KOPIS 수집 일시 중단] {} 페이지에서 WAF 차단으로 멈춤. 서버 재시작 필요 ===", cpage);
+			    break;
+			}
+
+			// 실제 목록 아이템이 비어있을 때만 수집 완료 처리
+			if (listResponse.getItemList() == null || listResponse.getItemList().isEmpty()) {
+			    log.info("=== [KOPIS 수집 완료] 총 {} 페이지 처리 완료 ===", cpage - 1);
+			    break;
 			}
 
 			log.info("[KOPIS 수집] {} 페이지 진행 중 (목록 수: {}건)", cpage, listResponse.getItemList().size());
 
+			int skipCount = 0;
+			
 			for (KopisListResponseDto.KopisItem item : listResponse.getItemList()) {
 				String externalId = "KOPIS_" + item.getMt20id();
 
+				// 1. 이미 존재하면 건당 로그 출력 없이 카운트만 올리고 즉시 통과
 				if (performanceRepository.existsByExternalId(externalId)) {
-					log.info("이미 존재하는 공연 Skip: {}", externalId);
+//					log.info("이미 존재하는 공연 Skip: {}", externalId); // 로그찍혀서 빠르게 못 넘어가
+					skipCount++;
 					continue;
 				}
 
+				//2. 신규 데이터 상세API호출
 				fetchDetailAndSave(item.getMt20id(), externalId);
 
 				try {
-					Thread.sleep(300);
+					Thread.sleep(500);
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}
+			}
+			
+			// 3. 페이지가 끝날 때 딱 1줄로 요약 로그만 출력
+			if (skipCount == listResponse.getItemList().size()) {
+			    log.info("⏩ [Fast-Skip] {} 페이지 30건 전체 이미 존재 (스킵 완료)", cpage);
+			} else {
+			    log.info("✅ [KOPIS 적재] {} 페이지 처리 완료 (스킵: {}건, 신규 저장: {}건)", 
+			            cpage, skipCount, listResponse.getItemList().size() - skipCount);
+			}
+			
+			try {
+			    Thread.sleep(200); // 목록 API 연사로 인한 WAF 차단 방지용 (0.2초 쉼)
+			} catch (InterruptedException e) {
+			    Thread.currentThread().interrupt();
 			}
 
 			cpage++;
