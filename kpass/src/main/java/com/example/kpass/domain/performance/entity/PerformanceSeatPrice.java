@@ -32,7 +32,7 @@ public class PerformanceSeatPrice {
     private Integer price;    // 예: 15000
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "performance_id")
+    @JoinColumn(name = "performanceId")
     private Performance performance;
 
     @Builder

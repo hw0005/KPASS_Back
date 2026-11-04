@@ -248,7 +248,7 @@ public class PerformanceBO {
 			} catch (Exception e) {
 				if (attempt < 3) {
 					try {
-						Thread.sleep(1000 * attempt); // 1초 대기 후 재시도
+						Thread.sleep(2000 * attempt); // 2, 4초 대기 후 재시도
 					} catch (InterruptedException ie) {
 						Thread.currentThread().interrupt();
 						return;

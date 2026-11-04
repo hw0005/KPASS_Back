@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import com.example.kpass.domain.performance.entity.Performance;
 
 @Repository
-public interface PerformanceRepository extends JpaRepository<Performance, Long> {
+public interface PerformanceRepository extends JpaRepository<Performance, Long>, PerformanceRepositoryCustom {
 	
 	// API 데이터 재수집 시 중복 삽입 방지
 	boolean existsByExternalId(String externalId);

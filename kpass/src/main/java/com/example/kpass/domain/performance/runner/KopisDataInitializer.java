@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 
-public class KopisDataIntializer implements ApplicationRunner {
+public class KopisDataInitializer implements ApplicationRunner {
 	private final PerformanceBO performanceBO;
 
 	// yaml의 kopis.init.enabled 설정값을 읽어옴 (기본값 false)

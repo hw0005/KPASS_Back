@@ -23,6 +23,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(Exception e) {
+    	e.printStackTrace();
         Map<String, Object> result = new HashMap<>();
         result.put("code", ErrorCode.INTERNAL_SERVER_ERROR.getCode());
         result.put("message", ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
