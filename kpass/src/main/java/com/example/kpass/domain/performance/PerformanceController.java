@@ -1,14 +1,19 @@
 package com.example.kpass.domain.performance;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.kpass.domain.performance.dto.MainPageResponseDto;
+import com.example.kpass.domain.performance.dto.mainpage.MainPageResponseDto;
+import com.example.kpass.domain.performance.dto.searchpage.SearchPageResponseDto;
 import com.example.kpass.domain.performance.service.PerformanceBO;
 import com.example.kpass.domain.performance.service.PerformanceService;
 
@@ -32,11 +37,38 @@ public class PerformanceController {
 		return ResponseEntity.ok("KOPIS 데이터 동기화 작업이 성공적으로 실행되었습니다");
 	}
 	
-	
+	/**
+	 * 메인페이지
+	 * @param region
+	 * @return
+	 */
 	@GetMapping("/main")
-	public ResponseEntity<MainPageResponseDto> getMainPage(
+	public ResponseEntity<Map<String, Object>> getMainPage(
 			@RequestParam(name = "region", required = false, defaultValue = "SEOUL") String region) {
-		MainPageResponseDto result = performanceService.getMainPageData(region);
+		
+		MainPageResponseDto mainData = performanceService.getMainPageData(region);
+		
+		Map<String, Object> result = new HashMap<>();
+		result.put("success", true);
+		result.put("message", "메인페이지공연 데이터 조회 성공");
+		result.put("data", mainData);
+		
+		return ResponseEntity.ok(result);
+	}
+	
+	
+	/**
+	 * 검색페이지
+	 */
+	@PostMapping("/closing-soon")
+	public ResponseEntity<Map<String, Object>> getSearchPage(
+			@PageableDefault(size = 30) Pageable pageable) {
+		SearchPageResponseDto searchData = performanceService.getAllDataListBySearchPage(pageable);
+		
+		Map<String, Object> result = new HashMap<>();
+		result.put("code", 200);
+		result.put("message", "검색페이지 기본 조회 완료");
+		result.put("data", searchData);
 		
 		return ResponseEntity.ok(result);
 	}

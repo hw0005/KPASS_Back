@@ -60,6 +60,8 @@ public class MemberController {
 		result.put("message", "로그인 성공");
 		result.put("memberId", member.getEmail());
 		result.put("password", member.getPassword());
+		result.put("email", member.getEmail());
+	    result.put("nickname", member.getNickname());
 		
 		return ResponseEntity.ok(result);
 	}

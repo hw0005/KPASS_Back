@@ -1,6 +1,6 @@
-package com.example.kpass.auth.service;
+package com.example.kpass.domain.auth.service;
 
-import com.example.kpass.auth.dto.OAuthUserInfoDto;
+import com.example.kpass.domain.auth.dto.OAuthUserInfoDto;
 
 public interface OAuthService {
 	String getProvider(); // KAKAO NAVER GOOGLE

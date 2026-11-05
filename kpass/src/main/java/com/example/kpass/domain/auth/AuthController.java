@@ -1,4 +1,4 @@
-package com.example.kpass.auth;
+package com.example.kpass.domain.auth;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.kpass.auth.dto.OAuthUserInfoDto;
-import com.example.kpass.auth.service.OAuthService;
+import com.example.kpass.domain.auth.dto.OAuthUserInfoDto;
+import com.example.kpass.domain.auth.service.OAuthService;
 import com.example.kpass.domain.member.entity.Member;
 import com.example.kpass.domain.member.repository.MemberRepository;
 import com.example.kpass.domain.member.service.MemberBO;

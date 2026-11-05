@@ -19,8 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import com.example.kpass.domain.performance.dto.KopisDetailResponseDto;
-import com.example.kpass.domain.performance.dto.KopisListResponseDto;
+import com.example.kpass.domain.performance.dto.kopis.KopisDetailResponseDto;
+import com.example.kpass.domain.performance.dto.kopis.KopisListResponseDto;
 import com.example.kpass.domain.performance.entity.Performance;
 import com.example.kpass.domain.performance.entity.PerformanceSeatPrice;
 import com.example.kpass.domain.performance.repository.PerformanceRepository;

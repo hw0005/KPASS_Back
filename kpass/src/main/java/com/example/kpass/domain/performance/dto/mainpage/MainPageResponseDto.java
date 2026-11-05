@@ -1,6 +1,8 @@
-package com.example.kpass.domain.performance.dto;
+package com.example.kpass.domain.performance.dto.mainpage;
 
 import java.util.List;
+
+import com.example.kpass.domain.performance.dto.PerformanceSummaryDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

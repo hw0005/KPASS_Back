@@ -6,7 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.kpass.auth.dto.OAuthUserInfoDto;
+import com.example.kpass.domain.auth.dto.OAuthUserInfoDto;
 import com.example.kpass.domain.member.entity.Member;
 import com.example.kpass.domain.member.repository.MemberRepository;
 import com.example.kpass.domain.member.validator.MemberValidator;

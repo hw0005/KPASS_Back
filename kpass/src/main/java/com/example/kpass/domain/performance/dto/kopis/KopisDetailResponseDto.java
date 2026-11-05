@@ -1,4 +1,4 @@
-package com.example.kpass.domain.performance.dto;
+package com.example.kpass.domain.performance.dto.kopis;
 
 import java.util.List;
 

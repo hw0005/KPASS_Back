@@ -1,4 +1,4 @@
-package com.example.kpass.auth.dto;
+package com.example.kpass.domain.auth.dto;
 
 import lombok.Builder;
 import lombok.Getter;

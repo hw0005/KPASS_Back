@@ -1,4 +1,4 @@
-package com.example.kpass.auth.service;
+package com.example.kpass.domain.auth.service;
 
 import java.util.Map;
 
@@ -13,7 +13,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import com.example.kpass.auth.dto.OAuthUserInfoDto;
+import com.example.kpass.domain.auth.dto.OAuthUserInfoDto;
 import com.example.kpass.global.error.BusinessException;
 import com.example.kpass.global.error.ErrorCode;
 
