@@ -19,4 +19,5 @@ public interface PerformanceRepositoryCustom {
 	
 	//검색페이지
 	Page<PerformanceSummaryDto> getAllDataListBySearchPage(Pageable pageable);
+	Page<PerformanceSummaryDto> getDataListBySearchThings(String title, String category, Pageable pageable);
 }

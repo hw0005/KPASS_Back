@@ -38,7 +38,7 @@ public class PerformanceService {
 	}
 	
 	
-	// 검색페이지
+	// ---------------------------------------------검색페이지
 	// 1. 다 가져오기
 	public SearchPageResponseDto getAllDataListBySearchPage(Pageable pageable) {
 		
@@ -57,5 +57,22 @@ public class PerformanceService {
 		return result;
 	}
 	
+	
+	// 2. 필터검색
+	public SearchPageResponseDto getDataListBySearchThings(String title, String category, Pageable pageable) {
+		
+		Page<PerformanceSummaryDto> pageResult = repository.getDataListBySearchThings(title, category, pageable);
+		
+		SearchPageResponseDto result = SearchPageResponseDto.builder()
+				.getAllDataListBySearchPage(pageResult.getContent())
+				.currentPage(pageResult.getNumber())
+				.totalPages(pageResult.getTotalPages())
+				.totalElements(pageResult.getTotalElements())
+				.isLast(pageResult.isLast())
+				.build();
+		
+		return result;
+	}
+	// ---------------------------------------------검색페이지
 	
 }

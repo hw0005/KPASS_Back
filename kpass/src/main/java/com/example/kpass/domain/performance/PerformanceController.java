@@ -58,7 +58,7 @@ public class PerformanceController {
 	
 	
 	/**
-	 * 검색페이지
+	 * 검색페이지1 : 들어오는 순간 뿌리기
 	 */
 	@PostMapping("/closing-soon")
 	public ResponseEntity<Map<String, Object>> getSearchPage(
@@ -68,6 +68,25 @@ public class PerformanceController {
 		Map<String, Object> result = new HashMap<>();
 		result.put("code", 200);
 		result.put("message", "검색페이지 기본 조회 완료");
+		result.put("data", searchData);
+		
+		return ResponseEntity.ok(result);
+	}
+	
+	@PostMapping("/search")
+	public ResponseEntity<Map<String, Object>> search(
+			@RequestParam(name= "title", required = false) String title,
+			@RequestParam(name = "category", required = false) String category,
+			@PageableDefault(size = 30) Pageable pageable) {
+		
+		// 백엔드 콘솔에 이 값이 어떻게 들어오는지 출력해보세요!
+	    System.out.println(">>> [SEARCH PARAM] title = " + title + ", category = " + category);
+		
+		SearchPageResponseDto searchData = performanceService.getDataListBySearchThings(title, category, pageable);
+		
+		Map<String, Object> result = new HashMap<>();
+		result.put("code", 200);
+		result.put("message", "검색 필터 조회 완료");
 		result.put("data", searchData);
 		
 		return ResponseEntity.ok(result);
