@@ -14,8 +14,12 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.BAD_REQUEST, "M001", "이미 사용 중인 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.BAD_REQUEST, "M002", "이미 사용 중인 닉네임입니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M003", "존재하지 않는 회원입니다."),
-	INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "M004", "비밀번호가 불일치합니다.");
-
+	INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "M004", "비밀번호가 불일치합니다."),
+	
+	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "로그인이 필요한 서비스입니다."),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "유효하지 않거나 만료된 토큰입니다."),
+    LOGGED_OUT_TOKEN(HttpStatus.UNAUTHORIZED, "A003", "로그아웃된 토큰입니다.");
+	
     private final HttpStatus status;
     private final String code;
     private final String message;
