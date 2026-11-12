@@ -60,3 +60,85 @@
 #### 3. 성과 및 결론 (Outcome)
 - **수집 안정성 100% 확보**: WAF 차단에 의한 중간 다운 현상 완전 제거.
 - **배치 파이프라인 완성**: 최초 1회 전수 적재 후, 일일 스케줄러를 통한 증분(Delta) 데이터 자동 갱신 파이프라인 구축.
+
+
+
+### 🛠️ 트러블슈팅: KOPIS 외부 API 대용량 동기화 및 WAF(방화벽) 차단 극복 - 2026.11.12
+#### 1. 다중 서버(Scale-Out) 환경의 세션 불일치 해결 (Session → JWT + Redis)
+
+* **문제 상황 (Problem)**
+  * 트래픽 분산을 위해 백엔드 인스턴스를 2대(`8080`, `8081`)로 확장하고 프론트엔드 로드밸런싱을 적용한 후, 한 서버에서 로그인해도 다른 서버로 API 요청이 라우팅되면 인증이 풀리는 **세션 불일치(Session Inconsistency)** 문제 발생.
+* **원인 분석 (Cause)**
+  * 기존 `HttpSession` 방식은 각 Tomcat 인스턴스의 로컬 메모리에 사용자 상태를 저장하므로, 별도의 세션 클러스터링 없이는 서버 간 로그인 상태를 공유할 수 없음.
+* **해결 방법 (Solution)**
+  * **Stateless JWT 인증 도입:** `JwtProvider`와 `OncePerRequestFilter` 기반의 `JwtAuthenticationFilter`를 구현하여 서버 메모리 의존성을 제거.
+  * **Redis 기반 하이브리드 상태 관리:** JWT의 단점(발급 후 강제 만료 불가)을 보완하기 위해 공용 **Redis**를 도입. `RT:{memberId}`로 Refresh Token을 관리하고, 로그아웃 시 남은 유효시간만큼 `BL:{accessToken}` 블랙리스트를 등록해 두 인스턴스 모두 즉시 접근을 차단하도록 구현.
+  * **커스텀 어노테이션으로 결합도 완화:** `@LoginMember`와 `HandlerMethodArgumentResolver`를 구현하여, 컨트롤러가 인증 방식(세션/토큰)을 몰라도 파라미터로 `memberId`를 직접 주입받도록 리팩토링.
+* **결과 (Result)**
+  * `8080`, `8081` 어느 인스턴스로 요청이 분산되어도 동일한 인증 상태를 유지하며, 로그아웃 즉시 모든 서버에서 해당 토큰이 무효화됨.
+
+---
+
+#### 2. 소셜 로그인 성공 후 장바구니 API 호출 시 `401 (A001)` 인증 실패
+
+* **문제 상황 (Problem)**
+  * 카카오·네이버 로그인 완료 후 브라우저 `localStorage`에 `accessToken`이 정상 저장되었음에도, 장바구니 조회(`GET /api/v1/cart`) 요청 시 `401 Unauthorized (A001: 로그인이 필요한 서비스입니다)` 에러 반환.
+* **원인 분석 (Cause)**
+  * 프론트엔드 `axiosClient`의 요청 인터셉터(`interceptors.request`)가 다중 서버 포트(`8080`/`8081`) 분기 처리만 수행하고, 스토리지에 저장된 토큰을 `Authorization` 헤더에 주입하는 로직이 누락됨.
+  * 또한 `Header.jsx`의 로그아웃 핸들러가 구버전 키(`token`)만 삭제하고 백엔드 블랙리스트 API(`/api/v1/auth/logout`)를 호출하지 않는 문제 확인.
+* **해결 방법 (Solution)**
+  * `axiosClient` 요청 인터셉터에서 `localStorage`의 `accessToken`을 조회해 `Authorization: Bearer <token>` 헤더를 자동으로 첨부하도록 수정.
+  * 로그아웃 시 백엔드 블랙리스트 등록 API를 선행 호출한 뒤 `finally` 블록에서 `accessToken`, `refreshToken`, `nickname`을 일괄 삭제하도록 동기화.
+
+```javascript
+// axiosClient.jsx - 로드밸런싱 및 JWT 헤더 자동 첨부
+axiosClient.interceptors.request.use((config) => {
+    const randomIndex = Math.floor(Math.random() * targetServers.length);
+    config.baseURL = targetServers[randomIndex];
+
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+```
+
+---
+
+#### 3. 장바구니 담기 요청 시 `500 (C002)` 서버 내부 오류 및 DB 스키마 충돌
+
+* **문제 상황 (Problem)**
+  * `Authorization` 헤더 정상 전송 이후 `POST /api/v1/cart` 요청 시 `500 Internal Server Error (C002)` 발생.
+* **원인 분석 (Cause)**
+  1. **컨트롤러 레거시 코드 잔존:** `CartController`가 여전히 비어 있는 `HttpSession`에서 `memberId`를 조회하여 `NullPointerException` 발생.
+  2. **DB 스키마 컬럼 충돌:** 과거 Hibernate `ddl-auto: update` 환경에서 오타로 생성된 `memeberId` 컬럼(`NOT NULL`, 기본값 없음)이 정상 컬럼인 `memberId`와 테이블에 공존하면서 `INSERT` 쿼리 제약조건 위반 발생.
+* **해결 방법 (Solution)**
+  * `CartController`의 모든 엔드포인트에서 `HttpSession`을 제거하고 `@LoginMember Long memberId`로 통일.
+  * MySQL `cart` 테이블에서 레거시 오타 컬럼을 제거하여 엔티티 매핑과 DB 스키마를 일치시킴.
+
+```sql
+ALTER TABLE cart DROP COLUMN memeberId;
+```
+
+---
+
+#### 4. DB 저장 성공 후 장바구니 화면 빈 목록 출력 문제
+
+* **문제 상황 (Problem)**
+  * MySQL `cart` 테이블에 데이터가 정상 적재되고 조회 API도 `200 OK`를 반환했으나, UI에는 "장바구니에 담긴 공연이 없습니다"가 표시됨.
+* **원인 분석 (Cause)**
+  * `axiosClient` 응답 인터셉터에서 이미 `response.data`를 언래핑(Unwrapping)하여 반환하고 있었으나, `CartPage.jsx`에서 응답 변수명 불일치(`ReferenceError: res is not defined`) 및 데이터 추출 깊이가 어긋나 배열 데이터가 `undefined`로 처리됨.
+* **해결 방법 (Solution)**
+  * `CartPage.jsx`의 비동기 응답 변수명과 `Array.isArray(res.data)` 검증 로직을 일원화하여 정상 렌더링 복구.
+
+---
+
+### 📊 트러블슈팅 요약
+
+| 구분 | 증상 | 핵심 원인 | 해결 조치 |
+| :--- | :--- | :--- | :--- |
+| **인프라/인증** | 다중 서버 간 로그인 풀림 | 서버 로컬 `HttpSession` 사용 | JWT + Redis(RT/블랙리스트) + `@LoginMember` 도입 |
+| **프론트 통신** | 토큰 보유 중 `401 (A001)` | Axios 인터셉터 헤더 누락 | 요청 인터셉터 `Bearer` 토큰 자동 주입 및 로그아웃 API 연동 |
+| **백엔드/DB** | 장바구니 담기 `500 (C002)` | 세션 잔존 코드 & `memeberId` 오타 컬럼 | 컨트롤러 어노테이션 교체 및 DB 레거시 컬럼 `DROP` |
+| **UI 렌더링** | `200 OK` 후 빈 화면 | 인터셉터 응답 구조와 컴포넌트 변수 불일치 | `CartPage` 응답 파싱 로직 통일 |
