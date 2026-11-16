@@ -30,6 +30,8 @@ public class QPerformanceSeatPrice extends EntityPathBase<PerformanceSeatPrice> 
 
     public final StringPath seatType = createString("seatType");
 
+    public final NumberPath<Integer> stock = createNumber("stock", Integer.class);
+
     public QPerformanceSeatPrice(String variable) {
         this(PerformanceSeatPrice.class, forVariable(variable), INITS);
     }

@@ -1,5 +1,7 @@
 package com.example.kpass.domain.performance.entity;
 
+import org.springframework.transaction.support.TransactionTemplate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -34,16 +36,21 @@ public class PerformanceSeatPrice {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "performanceId")
     private Performance performance;
+    
+    @Column(nullable = false)
+    private Integer stock;
 
     @Builder
-    public PerformanceSeatPrice(String seatType, Integer price) {
+    public PerformanceSeatPrice(String seatType, Integer price, Integer stock) {
         this.seatType = seatType;
         this.price = price;
+        this.stock = (stock!=null) ? stock : 100;
     }
     public static PerformanceSeatPrice createPrice(String seatType, Integer price) {
     	PerformanceSeatPrice psp = PerformanceSeatPrice.builder()
     	.seatType(seatType)
     	.price(price)
+    	.stock(100)
     	.build();
     	
     	return psp;
@@ -53,4 +60,25 @@ public class PerformanceSeatPrice {
     public void setPerformance(Performance performance) {
         this.performance = performance;
     }
+    
+    // 좌석 재고 차감
+    public void decreaseStock(Performance performance) {
+    	if(performance.getStockQuantity() <= 0) {
+    		throw new IllegalArgumentException("예매 수량은 1매이상이어야 합니다.");
+    	}
+    	if(this.stock < performance.getStockQuantity()) {
+    		throw new IllegalArgumentException("잔여좌석 부족(좌석: " + this.seatType+ ", 남은 수량: " + this.stock+ "석");
+    	}
+    	this.stock = this.stock - performance.getStockQuantity();
+    }
+    
+    // 좌석 재고 복구
+    public void increaseStcok(int quantity) {
+    	if (quantity > 0) {
+    		this.stock = this.stock + quantity;
+    	}
+    }
+    
+    
+    
 }
