@@ -24,7 +24,7 @@ public class QReservationItem extends EntityPathBase<ReservationItem> {
 
     public final NumberPath<Long> cartId = createNumber("cartId", Long.class);
 
-    public final StringPath id = createString("id");
+    public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final com.example.kpass.domain.performance.entity.QPerformance performance;
 

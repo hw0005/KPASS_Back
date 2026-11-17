@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 import com.example.kpass.domain.coupon.entity.Coupon;
 
 @Repository
-public interface CouponRepository extends JpaRepository<Coupon, Long>{
+public interface CouponRepository extends JpaRepository<Coupon, Long>, CouponRepositoryCustom {
 	Optional<Coupon> findByCode(String code);
 }

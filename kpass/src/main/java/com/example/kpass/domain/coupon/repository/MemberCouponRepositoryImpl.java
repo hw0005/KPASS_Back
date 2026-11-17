@@ -13,13 +13,13 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class MemberCouponQueryImpl implements MemberCouponRepositoryCustom{
+public class MemberCouponRepositoryImpl implements MemberCouponRepositoryCustom{
 	
 	private final JPAQueryFactory jpa;
 	private final QMemberCoupon mc = QMemberCoupon.memberCoupon;
 	private final QCoupon c = QCoupon.coupon;
 	
-	// 보유 쿠폰과 마스터 쿠폰 마스터(할인 금액)을 조회
+	// // 보유 쿠폰(memberCoupon)과 할인 금액이 들어가있는 원본쿠폰(coupon)을 한번에 fetchJoin 조회
 	@Override
 	public Optional<MemberCoupon> findByIdWithCoupon(Long memberCouponId) {
 		MemberCoupon result = jpa

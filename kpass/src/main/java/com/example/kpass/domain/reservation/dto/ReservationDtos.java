@@ -3,6 +3,8 @@ package com.example.kpass.domain.reservation.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.querydsl.core.annotations.QueryProjection;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -70,8 +72,7 @@ public class ReservationDtos {
 	
 	// QueryDSL DTO PRojection 전용 예매 내역 응답
 	@Getter
-	@AllArgsConstructor
-	public static class ReservationHisotryResponse {
+	public static class ReservationHistoryResponse {
 		private Long reservationId;
         private String orderUid;
         private String orderName;
@@ -81,6 +82,24 @@ public class ReservationDtos {
         private LocalDateTime createdAt;
         private String paymentMethod;
         private LocalDateTime approvedAt;
+        
+        @QueryProjection
+		public ReservationHistoryResponse(Long reservationId, String orderUid, String orderName, Integer ticketQuantity,
+				Integer totalPrice, String reservationStatus, LocalDateTime createdAt, String paymentMethod,
+				LocalDateTime approvedAt) {
+        	
+			this.reservationId = reservationId;
+			this.orderUid = orderUid;
+			this.orderName = orderName;
+			this.ticketQuantity = ticketQuantity;
+			this.totalPrice = totalPrice;
+			this.reservationStatus = reservationStatus;
+			this.createdAt = createdAt;
+			this.paymentMethod = paymentMethod;
+			this.approvedAt = approvedAt;
+		}
+        
+        
 	}
 	
 	
