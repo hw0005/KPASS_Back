@@ -62,14 +62,14 @@ public class PerformanceSeatPrice {
     }
     
     // 좌석 재고 차감
-    public void decreaseStock(Performance performance) {
-    	if(performance.getStockQuantity() <= 0) {
+    public void decreaseStock(int quantity) {
+    	if(quantity <= 0) {
     		throw new IllegalArgumentException("예매 수량은 1매이상이어야 합니다.");
     	}
-    	if(this.stock < performance.getStockQuantity()) {
+    	if(this.stock < quantity) {
     		throw new IllegalArgumentException("잔여좌석 부족(좌석: " + this.seatType+ ", 남은 수량: " + this.stock+ "석");
     	}
-    	this.stock = this.stock - performance.getStockQuantity();
+    	this.stock = this.stock - quantity;
     }
     
     // 좌석 재고 복구
@@ -78,7 +78,5 @@ public class PerformanceSeatPrice {
     		this.stock = this.stock + quantity;
     	}
     }
-    
-    
     
 }

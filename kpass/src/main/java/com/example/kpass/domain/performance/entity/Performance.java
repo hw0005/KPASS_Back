@@ -25,66 +25,66 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Performance {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	@Column(unique = true, length = 100)
 	private String externalId;
-	
+
 	@Column(nullable = false, length = 200)
 	private String title;
-	
+
 	@Column(nullable = false, length = 50)
 	private String category;
-	
-	@Column(nullable = false, length=50)
+
+	@Column(nullable = false, length = 50)
 	private String region;
-	
+
 	@Column(nullable = false, length = 100)
 	private String venue; // 행사 장소
-	
+
 	@Column(length = 255)
 	private String address;
-	
+
 	private Double latitude; // 위도 (Latitude)
-    
-    private Double longitude; // 경도 (Longitude)
-    
-	@Column(length = 500) 
+
+	private Double longitude; // 경도 (Longitude)
+
+	@Column(length = 500)
 	private String posterUrl;
-	
+
 	@Column(nullable = false)
 	private Integer price;
-	
+
 	@OneToMany(mappedBy = "performance", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PerformanceSeatPrice> seatPrices = new ArrayList<>();
-	
+	private List<PerformanceSeatPrice> seatPrices = new ArrayList<>();
+
 	@Column(nullable = false)
 	private Integer stockQuantity; // 좌석 수
-	
+
 	@Column(nullable = false)
 	private LocalDate startDate;
-	
+
 	@Column(nullable = false)
 	private LocalDate endDate;
 
 	@Column(nullable = false)
 	private Integer viewCount = 0;
-	
+
 	@Column(nullable = false)
 	private Integer likeCount = 0;
-	
+
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
-	
+
 	@PrePersist
 	public void prePersist() {
 		this.createdAt = LocalDateTime.now();
 		this.updatedAt = LocalDateTime.now();
 	}
-	
+
 	@PreUpdate
 	public void preUpdate() {
 		this.updatedAt = LocalDateTime.now();
@@ -112,48 +112,45 @@ public class Performance {
 		this.viewCount = viewCount != null ? viewCount : 0;
 		this.likeCount = likeCount != null ? likeCount : 0;
 	}
-	
-	public static Performance createPerformance(
-			String externalId,
-			String title,
-			String category,
-			String region,
-			String venue,
-			String posterUrl,
-			Integer price,
-			List<PerformanceSeatPrice> seatPrices,
-			LocalDate startDate,
+
+	public static Performance createPerformance(String externalId, String title, String category, String region,
+			String venue, String posterUrl, Integer price, List<PerformanceSeatPrice> seatPrices, LocalDate startDate,
 			LocalDate endDate) {
-		
-		Performance performance = Performance.builder()
-				.externalId(externalId)
-				.title(title)
-				.category(category)
-				.region(region)
-				.venue(venue)
-				.posterUrl(posterUrl)
-				.price(price)
-				.startDate(startDate)
-				.endDate(endDate)
-				.viewCount(0)
-				.likeCount(0)
-				.build();
-		
+
+		Performance performance = Performance.builder().externalId(externalId).title(title).category(category)
+				.region(region).venue(venue).posterUrl(posterUrl).price(price).startDate(startDate).endDate(endDate)
+				.viewCount(0).likeCount(0).build();
+
 		if (seatPrices != null) {
-            for (PerformanceSeatPrice seatPrice : seatPrices) {
-                performance.addSeatPrice(seatPrice);
-            }
-        }
+			for (PerformanceSeatPrice seatPrice : seatPrices) {
+				performance.addSeatPrice(seatPrice);
+			}
+		}
 		return performance;
 	}
-	
+
 	// 연관관계 편의 메서드 (두 줄의 관계 설정을 하나로 캡슐화)
 	public void addSeatPrice(PerformanceSeatPrice seatPrice) {
-	    this.seatPrices.add(seatPrice);   // 1. 부모 -> 자식 연결
-	    seatPrice.setPerformance(this);   // 2. 자식 -> 부모 연결 (FK 관리)
+		this.seatPrices.add(seatPrice); // 1. 부모 -> 자식 연결
+		seatPrice.setPerformance(this); // 2. 자식 -> 부모 연결 (FK 관리)
 	}
-	
-	
-	
-	
+
+	// 단일석 공연 재고 차감
+	public void decreaseStockQuantity(int quantity) {
+		if (quantity <= 0) {
+			throw new IllegalArgumentException("예매 수량은 1매 이상이어야 합니다.");
+		}
+		if (this.stockQuantity < quantity) {
+			throw new IllegalArgumentException("잔여 좌석이 부족합니다. (남은 수량: " + this.stockQuantity + "석)");
+		}
+		this.stockQuantity = this.stockQuantity - quantity;
+	}
+
+	// 단일석 공연 재고 복구 (결제 취소 및 5분 만료 시)
+	public void increaseStockQuantity(int quantity) {
+		if (quantity > 0) {
+			this.stockQuantity = this.stockQuantity + quantity;
+		}
+	}
+
 }

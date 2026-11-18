@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -54,6 +55,7 @@ public class ReservationItem {
 	@Column(name="unitPrice", nullable=false)
 	private Integer unitPrice;
 
+	@Builder
 	public ReservationItem(Performance performance, PerformanceSeatPrice seatPrice,
 			Long cartId, String seatType, Integer quantity, Integer unitPrice) {
 		
