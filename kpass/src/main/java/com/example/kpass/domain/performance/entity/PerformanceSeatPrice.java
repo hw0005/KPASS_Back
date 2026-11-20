@@ -1,7 +1,5 @@
 package com.example.kpass.domain.performance.entity;
 
-import org.springframework.transaction.support.TransactionTemplate;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

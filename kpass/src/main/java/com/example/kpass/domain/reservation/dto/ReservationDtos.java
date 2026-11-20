@@ -8,11 +8,13 @@ import com.querydsl.core.annotations.QueryProjection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 public class ReservationDtos {
 	
 	// 5분 티켓 선점 및 예매 생성요청
 	@Getter
+	@Setter
 	@NoArgsConstructor
 	public static class CreateReservationRequest {
 		private List<ReservationItemRequest> items;
@@ -22,6 +24,7 @@ public class ReservationDtos {
 	
 	// 예매 상세 항목 요청 dto(단건 바로 결제 or 장바구니 다건 결제)
 	@Getter
+	@Setter
 	@NoArgsConstructor
 	public static class ReservationItemRequest {
 		private Long cartId; // 장바구니에서 넘어온 cart.id
@@ -49,7 +52,7 @@ public class ReservationDtos {
 	// 토스 결제 최종 승인 요청
 	@Getter
 	@NoArgsConstructor
-	public class ConfirmPaymentRequest {
+	public static class ConfirmPaymentRequest {
 		private String paymentKey;
 		private String orderId; // 프론트 successUrl 
 		private Integer amount;

@@ -118,8 +118,11 @@ public class ReservationCommandService {
 		}
 		
 		// 적용할 쿠폰 있다면
-		if(request.getMemberCouponId() != null) {
+		if (request.getMemberCouponId() != null) {
 			lockKeys.add("lock:memberCoupon:" + request.getMemberCouponId());
+		}
+		if (lockKeys.isEmpty()) {
+			throw new IllegalArgumentException("예매 대상 공연 ID(performanceId)가 누락되었습니다.");
 		}
 		
 		// 레디슨 락 걸 배열
@@ -140,7 +143,6 @@ public class ReservationCommandService {
 			}
 			
 			// 5. 락 내부에서 DB 트랜잭션 실행(DB 커밋 끝난 후 FINALLY에서 락 해제)
-			
 			return transactionTemplate.execute(new TransactionCallback<CreateReservationResponse>() {
 				@Override
 				public CreateReservationResponse doInTransaction(TransactionStatus status) {
@@ -260,7 +262,7 @@ public class ReservationCommandService {
 			
 			// 총 갯수와 가격
 			totalTicketQuantity += itemReq.getQuantity();
-			rawTotalPrice += rawTotalPrice + (actualUnitPrice * itemReq.getQuantity());
+			rawTotalPrice += actualUnitPrice * itemReq.getQuantity();
 			
 			ReservationItem reservationItem = ReservationItem.builder()
 					.performance(performance)
@@ -281,7 +283,7 @@ public class ReservationCommandService {
 			finalTotalPrice = 0;
 		}
 		
-		if (!Objects.equals(firstPerformance, request.getTotalPrice())) {
+		if (!Objects.equals(finalTotalPrice, request.getTotalPrice())) {
 			throw new IllegalArgumentException("요청 금액과 서버 계산 금액이 일치하지 않습니다.");
 		}
 		

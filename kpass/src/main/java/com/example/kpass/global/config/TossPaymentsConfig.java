@@ -30,7 +30,7 @@ public class TossPaymentsConfig {
 		
 		return RestClient.builder()
 				.baseUrl(baseUrl)
-				.defaultHeader(HttpHeaders.AUTHORIZATION, "Basic" + encodedAuth)
+				.defaultHeader(HttpHeaders.AUTHORIZATION, "Basic " + encodedAuth)
 				.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 				.build();
 	}

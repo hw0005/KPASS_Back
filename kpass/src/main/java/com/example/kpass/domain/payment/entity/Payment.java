@@ -14,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -72,5 +73,12 @@ public class Payment {
 		this.status = PaymentStatus.REFUNDED;
 	}
 	
+	@PrePersist
+	public void prePersist() {
+	    if (this.createdAt == null) {
+	        this.createdAt = LocalDateTime.now();
+	    }
+
+	}
 	
 }
