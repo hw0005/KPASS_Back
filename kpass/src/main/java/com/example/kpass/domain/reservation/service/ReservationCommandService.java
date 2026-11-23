@@ -17,6 +17,7 @@ import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.example.kpass.domain.cart.CartController;
+import com.example.kpass.domain.cart.repo.CartRepository;
 import com.example.kpass.domain.coupon.entity.MemberCoupon;
 import com.example.kpass.domain.coupon.repository.MemberCouponRepository;
 import com.example.kpass.domain.member.entity.Member;
@@ -41,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ReservationCommandService {
 
-    private final TestRepository testRepository;
 
     private final CartController cartController;
 	// CUD: 예매생성결제, 분산락, 외부토스 API 통신, 재고 차감 == Command
@@ -59,6 +59,7 @@ public class ReservationCommandService {
 	private final PerformanceSeatPriceRepository performanceSeatPriceRepository;
 	private final MemberCouponRepository memberCouponRepository;
 	private final ReservationRepository reservationRepository;
+	private final CartRepository cartRepository;
 
 
 	// create: Redisson MultiLock으로 동시성 제어, 5분 티켓 선점(Status: PENDING).
@@ -294,7 +295,28 @@ public class ReservationCommandService {
 		}
 		
 		// 저장하기
-		reservation.updateOrderSummary(firstPerformance, orderName, totalTicketQuantity, finalTotalPrice);;
+		reservation.updateOrderSummary(firstPerformance, orderName, totalTicketQuantity, finalTotalPrice);
+		
+		
+		// 최종 결제 금액이 0원(무료/전액쿠폰)이면 즉시 삭제 -> PG사 안 가도 된다 이말
+		if (finalTotalPrice == 0) {
+			reservation.confirm();
+			
+			List<Long> cartIds = new ArrayList<>();
+			List<ReservationItem> reservationItems = reservation.getReservationItems();
+			for (int i = 0; i < reservationItems.size(); i++) {
+				Long cartId = reservationItems.get(i).getCartId();
+				if (cartId != null) {
+					cartIds.add(cartId);
+				}
+			}
+			
+			if (!cartIds.isEmpty()) {
+				cartRepository.deleteAllByIdInBatch(cartIds);
+			}
+		}
+		
+		
 		Reservation savedReservation = reservationRepository.save(reservation);
 		
 		return new CreateReservationResponse(

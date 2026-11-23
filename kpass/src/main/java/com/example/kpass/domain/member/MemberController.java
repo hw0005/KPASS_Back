@@ -1,8 +1,10 @@
 package com.example.kpass.domain.member;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.kpass.domain.member.entity.Member;
 import com.example.kpass.domain.member.service.MemberBO;
+import com.example.kpass.global.auth.JwtProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 public class MemberController {
 	
 	private final MemberBO memberBO;
+	private final JwtProvider jwtProvider;
+	private final StringRedisTemplate redisTemplate;
 	
 	/**
 	 * 회원가입 로직(로컬)
@@ -55,9 +60,16 @@ public class MemberController {
 		//
 		Member member = memberBO.login(email, password);
 		
+		// 소셜 로그인과 동일하게 JWT 발급 및 Redis Refresh Token 저장
+		String accessToken = jwtProvider.createAccessToken(member.getId());
+		String refreshToken = jwtProvider.createRefreshToken(member.getId());
+		redisTemplate.opsForValue().set("RT:" + member.getId(), refreshToken, Duration.ofDays(7));
+		
 		Map<String, Object> result = new HashMap<>();
 		result.put("code", 200);
 		result.put("message", "로그인 성공");
+		result.put("accessToken", accessToken); 
+		result.put("refreshToken", refreshToken); 
 		result.put("memberId", member.getEmail());
 		result.put("password", member.getPassword());
 		result.put("email", member.getEmail());

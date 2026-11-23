@@ -101,10 +101,5 @@ public class ReservationDtos {
 			this.paymentMethod = paymentMethod;
 			this.approvedAt = approvedAt;
 		}
-        
-        
 	}
-	
-	
-	
 }

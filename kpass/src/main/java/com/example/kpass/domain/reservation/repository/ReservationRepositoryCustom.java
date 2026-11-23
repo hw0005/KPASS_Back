@@ -1,15 +1,15 @@
 	package com.example.kpass.domain.reservation.repository;
 	
 	import java.time.LocalDateTime;
-	import java.util.List;
-	import java.util.Optional;
-	
-	import org.springframework.data.domain.Page;
-	import org.springframework.data.domain.Pageable;
-	
-	import com.example.kpass.domain.reservation.dto.ReservationDtos.ReservationHistoryResponse;
-	import com.example.kpass.domain.reservation.entity.Reservation;
-	import com.example.kpass.domain.reservation.entity.ReservationStatus;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import com.example.kpass.domain.reservation.dto.ReservationDtos.ReservationHistoryResponse;
+import com.example.kpass.domain.reservation.entity.Reservation;
+import com.example.kpass.domain.reservation.entity.ReservationStatus;
 	
 	public interface ReservationRepositoryCustom {
 	

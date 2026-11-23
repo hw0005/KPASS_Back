@@ -2,7 +2,9 @@ package com.example.kpass.domain.payment.service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,6 +22,7 @@ import com.example.kpass.domain.payment.repository.PaymentRepository;
 import com.example.kpass.domain.reservation.dto.ReservationDtos.ConfirmPaymentRequest;
 import com.example.kpass.domain.reservation.dto.ReservationDtos.ConfirmPaymentResponse;
 import com.example.kpass.domain.reservation.entity.Reservation;
+import com.example.kpass.domain.reservation.entity.ReservationItem;
 import com.example.kpass.domain.reservation.repository.ReservationRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -115,6 +118,20 @@ public class PaymentCommandService {
 					
 					// 응답 온 거 취사했고 이걸 payment에 저장
 					paymentRepository.save(payment);
+					
+					// 장바구니를 통한 결제 건이라면 무조건 삭제
+					List<Long> cartIds = new ArrayList<>();
+					for (ReservationItem item : targetReservation.getReservationItems()) {
+						if (item.getCartId() != null) {
+							cartIds.add(item.getCartId());
+						}
+					}
+					
+					if(!cartIds.isEmpty()) {
+						cartRepository.deleteAllByIdInBatch(cartIds);
+					}
+					
+					
 
 					// 프론트에 반환할 거 담기.
 					return new ConfirmPaymentResponse(targetReservation.getId(), 
