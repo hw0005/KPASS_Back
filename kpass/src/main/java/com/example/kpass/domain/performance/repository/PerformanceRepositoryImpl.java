@@ -11,23 +11,32 @@ import org.springframework.util.StringUtils;
 
 import com.example.kpass.domain.performance.dto.PerformanceSummaryDto;
 import com.example.kpass.domain.performance.dto.QPerformanceSummaryDto;
+import com.example.kpass.domain.performance.dto.venue.PerformanceMapResponse;
+import com.example.kpass.domain.performance.dto.venue.QPerformanceMapResponse;
+import com.example.kpass.domain.performance.dto.venue.QVenueTargetDto;
+import com.example.kpass.domain.performance.dto.venue.VenueTargetDto;
 import com.example.kpass.domain.performance.entity.QPerformance;
+import com.example.kpass.global.auth.LoginMemberArgumentResolver;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
 public class PerformanceRepositoryImpl implements PerformanceRepositoryCustom{
+
+    private final LoginMemberArgumentResolver loginMemberArgumentResolver;
 	
 	private final JPAQueryFactory queryFactory;
 	
 	private final QPerformance per = QPerformance.performance;
-	
+
 	
 	//----------------------------------------------------메인페이지---------------------------------------------
 	@Override
@@ -215,5 +224,71 @@ public class PerformanceRepositoryImpl implements PerformanceRepositoryCustom{
 	    return Expressions.stringTemplate("replace({0}, ' ', '')", per.title)
 	            .containsIgnoreCase(cleanTitle);
 	}
+	//------------------------------------------------------------
+	//------------------------------------------------------------------------지도페이지-------
 	
+	// 1. 1개월 이내 활성 공연장(중복 제거) 조회
+	@Override
+	public List<VenueTargetDto> findAllVenuesWithoutCoordinates() {
+		return queryFactory
+				.select(new QVenueTargetDto(
+						per.venue,
+						per.region.stringValue()
+				))
+				.distinct()
+				.from(per)
+				.where(
+						per.latitude.isNull(),
+						per.venue.isNotNull()
+				)
+				.fetch();
+	}
+	
+	// 2. 검증된 좌표를 동일 공연장, 지역 공연에 일괄 반영
+	@Override
+	@Transactional
+	public long bulkUpdateCoordinates(String venue, String region, String address,
+			Double latitude, Double longitude) {
+		
+		return queryFactory
+				.update(per)
+				.set(per.address, address)
+				.set(per.latitude, latitude)
+				.set(per.longitude, longitude)
+				.where(
+						per.venue.eq(venue),
+						per.region.stringValue().eq(region),
+						per.latitude.isNull()
+				)
+				.execute();
+	}
+	
+	// 3. 지도 마커용 공연 목록 조회(카테고리 필터 + 오늘~1개월 내)
+	public List<PerformanceMapResponse> findPerformanceForMap(LocalDate today, LocalDate oneMonthLater, String category) {
+		return queryFactory
+				.select(new QPerformanceMapResponse(
+						per.id,
+						per.externalId,
+						per.title,
+						per.category.stringValue(),
+						per.venue,
+						per.address,
+						per.latitude,
+						per.longitude,
+						per.posterUrl,
+						per.price,
+						per.startDate,
+						per.endDate
+				))
+				.from(per)
+				.where(
+						per.latitude.isNotNull(),
+						per.longitude.isNotNull(),
+						per.endDate.goe(today),
+						per.startDate.loe(oneMonthLater),
+						eqCategory(category)
+				)
+				.orderBy(per.startDate.asc(), per.id.desc())
+				.fetch();
+	}
 }

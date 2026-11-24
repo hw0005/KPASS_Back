@@ -153,4 +153,12 @@ public class Performance {
 		}
 	}
 
+	
+	// 위치 넣기
+	public void updateLocation(String address, Double latitude, Double longitude) {
+		this.address = address;
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
+	
 }
