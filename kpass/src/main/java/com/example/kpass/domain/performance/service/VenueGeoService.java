@@ -20,6 +20,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.example.kpass.domain.performance.dto.venue.VenueTargetDto;
 import com.example.kpass.domain.performance.repository.PerformanceRepository;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,13 +35,16 @@ public class VenueGeoService {
 	private final PerformanceRepository performanceRepository;
 	private final RestTemplate restTemplate = new RestTemplate();
 
-	@Value("${kakao.api.key}")
+	@Value("${oauth.providers.kakao.client-id}")
 	private String kakaoRestApiKey;
 
 	private static final String KAKAO_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
 
 	private final Map<String, GeoResult> geoCache = new ConcurrentHashMap<>();
 	private final Set<String> failedCache = ConcurrentHashMap.newKeySet();
+	
+	// 1. 클래스 필드에 ObjectMapper 추가
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Getter
 	@AllArgsConstructor
@@ -133,11 +137,16 @@ public class VenueGeoService {
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Authorization", "KakaoAK " + kakaoRestApiKey);
 
-			ResponseEntity<JsonNode> response = restTemplate.exchange(uri, HttpMethod.GET, new HttpEntity<>(headers),
-					JsonNode.class);
+			
+			ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, new HttpEntity<>(headers),
+					String.class);
+			String rawBody = response.getBody();
+			if (rawBody == null || rawBody.isBlank()) {
+				return null;
+			}
 
-			JsonNode body = response.getBody();
-			if (body == null || !body.has("documents")) {
+			JsonNode body = objectMapper.readTree(rawBody);
+			if (!body.has("documents")) {
 				return null;
 			}
 

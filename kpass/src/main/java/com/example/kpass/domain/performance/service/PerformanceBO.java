@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +22,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.example.kpass.domain.performance.dto.kopis.KopisDetailResponseDto;
 import com.example.kpass.domain.performance.dto.kopis.KopisListResponseDto;
+import com.example.kpass.domain.performance.dto.venue.PerformanceMapResponse;
 import com.example.kpass.domain.performance.entity.Performance;
 import com.example.kpass.domain.performance.entity.PerformanceSeatPrice;
 import com.example.kpass.domain.performance.repository.PerformanceRepository;
@@ -32,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class PerformanceBO {
+
+    private final VenueGeoService venueGeoService;
 
 	private final PerformanceRepository performanceRepository;
 	private final RestTemplate restTemplate = new RestTemplate();
@@ -46,6 +50,7 @@ public class PerformanceBO {
 	// [좌석명 + 가격] 추출 정규식 (예: "R석 15,000원", "일반석 10000원")
 	private static final Pattern SEAT_PRICE_PATTERN = Pattern
 			.compile("([가-힣A-Za-z0-9\\s]+?)\\s*(\\d{1,3}(?:,\\d{3})*|\\d+)\\s*원");
+
 
 	// KOPIS WAF 방화벽 통과용 완벽한 HTTP Header 설정
 	/**
@@ -260,6 +265,31 @@ public class PerformanceBO {
 		}
 	}
 
+	
+	//----------------------------------------------------지도 및 좌표 동기화---------------------------------------------
+
+	/**
+	 * 지도 마커용 공연 목록 조회 (오늘 기준 1개월 이내 + 카테고리 필터)
+	 */
+	@Transactional(readOnly = true)
+	public List<PerformanceMapResponse> getPerformanceForMap(String category) {
+		LocalDate today = LocalDate.now();
+		LocalDate oneMonthLater = today.plusMonths(1);
+		
+		
+		return performanceRepository.findPerformanceForMap(today, oneMonthLater, category);
+	}
+	/**
+	 * DB 내 기존 전체 공연장 좌표 일괄 보강 실행
+	 */
+	public Map<String, Long> syncAllVenueCoordinates() {
+		return venueGeoService.syncAllVenueCoordinates();
+	}
+	
+	
+	
+	
+	//----------------------------------------------------내부 유틸---------------------------------------------
 	/**
 	 * pcseguidance 텍스트 파싱 ➔ List<PerformanceSeatPrice> 생성
 	 */

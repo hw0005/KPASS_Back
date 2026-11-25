@@ -8,7 +8,7 @@ import lombok.Getter;
 
 @Getter
 public class PerformanceMapResponse {
-	
+
 	private Long id;
 	private String externalId;
 	private String title;
@@ -19,16 +19,15 @@ public class PerformanceMapResponse {
 	private Double longitude;
 	private String posterUrl;
 	private int price;
-	private LocalDate startdate;
+	private LocalDate startDate;
 	private LocalDate endDate;
-	
-	
+
 	@QueryProjection
-	public PerformanceMapResponse(Long id, String title, String category,
-			String venue, String address, Double latitude,
-			Double longitude, String posterUrl, int price, 
-			LocalDate startdate, LocalDate endDate) {
+	public PerformanceMapResponse(Long id, String externalId, String title, String category, String venue,
+			String address, Double latitude, Double longitude, String posterUrl, int price, LocalDate startDate,
+			LocalDate endDate) {
 		this.id = id;
+		this.externalId = externalId;
 		this.title = title;
 		this.category = category;
 		this.venue = venue;
@@ -37,12 +36,8 @@ public class PerformanceMapResponse {
 		this.longitude = longitude;
 		this.posterUrl = posterUrl;
 		this.price = price;
-		this.startdate = startdate;
+		this.startDate = startDate;
 		this.endDate = endDate;
 	}
-	
-	
-	
-	
-	
+
 }

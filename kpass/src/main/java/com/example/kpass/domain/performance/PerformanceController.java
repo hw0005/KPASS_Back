@@ -1,6 +1,7 @@
 package com.example.kpass.domain.performance;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.kpass.domain.performance.dto.mainpage.MainPageResponseDto;
 import com.example.kpass.domain.performance.dto.searchpage.SearchPageResponseDto;
+import com.example.kpass.domain.performance.dto.venue.PerformanceMapResponse;
 import com.example.kpass.domain.performance.service.PerformanceBO;
 import com.example.kpass.domain.performance.service.PerformanceService;
 
@@ -94,4 +96,40 @@ public class PerformanceController {
 	
 	
 	
+	/**
+	 * 지도 및 상세페이지용 전체 공연장 좌표 일괄 동기화
+	 * POST /api/v1/performances/map/sync
+	 */
+	@PostMapping("/map/sync")
+	public ResponseEntity<Map<String, Object>> syncMapCoordinates() {
+		Map<String, Long> syncResult = performanceBO.syncAllVenueCoordinates();
+		
+		Map<String, Object> result = new HashMap<>();
+		
+		result.put("code", 200);
+		result.put("message", "공연장 좌표 동기화 완료");
+		result.put("data", syncResult);
+		
+		return ResponseEntity.ok(result);
+	}
+	
+	
+	/**
+	 * 지도 페이지 마커 조회 (오늘 기준 1개월 이내 + 카테고리 필터)
+	 * GET /api/v1/performances/map?category=MUSICAL
+	 */
+	@GetMapping("/map")
+	public ResponseEntity<Map<String, Object>> getPerformanceForMap(
+			@RequestParam(name = "category", required = false, defaultValue = "ALL") String category) {
+		
+		List<PerformanceMapResponse> mapList = performanceBO.getPerformanceForMap(category);
+		
+		Map<String, Object> result = new HashMap<>();
+		
+		result.put("code", 200);
+		result.put("message", "지도 공연 목록 조회 성공");
+		result.put("data", mapList);
+		
+		return ResponseEntity.ok(result);
+	}
 }
