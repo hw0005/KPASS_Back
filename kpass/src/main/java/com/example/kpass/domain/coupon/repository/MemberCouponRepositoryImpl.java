@@ -1,6 +1,10 @@
 package com.example.kpass.domain.coupon.repository;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.stereotype.Repository;
 
@@ -29,8 +33,58 @@ public class MemberCouponRepositoryImpl implements MemberCouponRepositoryCustom{
                 .fetchOne();
 
         return Optional.ofNullable(result);
-			
-				
 	}
+	
+	// 결제창 드롭다운: 아직 안 썻고, 만료일 안 지남
+	@Override
+	public List<MemberCoupon> findUsableCouponsByMemberId(Long memberId) {
+		return jpa
+				.selectFrom(mc)
+				.join(mc.coupon, c).fetchJoin()
+				.where(
+						mc.member.id.eq(memberId),
+						mc.isUsed.isFalse(),
+						c.validUntil.after(LocalDateTime.now())
+						)
+				.orderBy(c.discountAmount.desc(), mc.id.desc())
+				.fetch();
+	}
+	
+	// 헤더 드롭다운
+	@Override
+	public Set<Long> findIssuedCouponIdsByMemberId(Long memberId) {
+		List<Long> ids = jpa
+				.select(mc.coupon.id)
+				.from(mc)
+				.where(mc.member.id.eq(memberId))
+				.fetch();
+		return new HashSet<>(ids);
+	}
+	
+	//데이터 존재 여부 확인하기 -> 중복 발급 제한	
+	@Override
+	public boolean existsByMemberIdAndCouponId(Long memberId, Long couponId) {
+		Integer fetchOne = jpa
+				.selectOne()
+				.from(mc)
+				.where(
+						mc.member.id.eq(memberId),
+						mc.coupon.id.eq(couponId)
+				)
+				.fetchFirst();
+
+		if(fetchOne == null) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	
+	
+	
+	
+	
+	
 
 }

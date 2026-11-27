@@ -34,6 +34,7 @@ import lombok.Setter;
 public class MemberCoupon {
 	
 	// 특정 회원(Member)이 발급받은 쿠폰 내역과 실제 사용 여부(isUsed)를 관리
+	// memberId와 couponId로 유니크 걸어 한 회원 2번 발급 제한
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -76,6 +76,7 @@ public class PerformanceRepositoryImpl implements PerformanceRepositoryCustom{
 						per.endDate
 						))
 				.from(per)
+				.where(per.endDate.goe(LocalDate.now()))
 				.orderBy(per.id.desc())
 				.limit(10)
 				.fetch();
@@ -97,7 +98,7 @@ public class PerformanceRepositoryImpl implements PerformanceRepositoryCustom{
 						))
 				.from(per)
 				.where(per.region.stringValue().eq(region) ,per.endDate.goe(LocalDate.now()))
-				.orderBy(per.startDate.asc())
+				.orderBy(per.endDate.asc(), per.startDate.asc())
 				.limit(limit)
 				.fetch();
 				

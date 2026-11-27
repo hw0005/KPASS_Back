@@ -56,10 +56,12 @@ public class Coupon {
 		this.name = name;
 		this.discountAmount = discountAmount;
 		this.totalQuantity = totalQuantity;
+		this.remainQuantity = totalQuantity; // 남은수량 박아넣기 근데 처음엔 총 수량임
 		this.validUntil = validUntil;
+		this.createdAt = LocalDateTime.now();
 	}
 	
-	// 회원이 선착순 쿠폰을 발급받을 때 호출
+	// 회원이 선착순 쿠폰을 발급받을 때 호출, , 수량 직접 안 깎고 검증 후 차감
 	public void decreaseQuantity() {
 		// 시간 지났나?
 		if(LocalDateTime.now().isAfter(this.validUntil)) {
